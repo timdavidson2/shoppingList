@@ -1,38 +1,53 @@
 import React, { Component } from 'react';
 import { Container, ListGroup, ListGroupItem, Button } from 'reactstrap';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
+import { connect } from 'react-redux';
+import { getItems, deleteItem } from '../actions/itemActions';
+import PropTypes from 'prop-types';
 const { v4: uuidv4 } = require('uuid');
 
 class ShoppingList extends Component {
-  state = {
-    items: [
-      { id: uuidv4(), name: 'Eggs' },
-      { id: uuidv4(), name: 'Milk' },
-      { id: uuidv4(), name: 'Steak' },
-      { id: uuidv4(), name: 'Water' },
-    ],
+  componentDidMount() {
+    this.props.getItems();
+  }
+
+  onDeleteClick = (id) => {
+    this.props.deleteItem(id);
   };
+
   render() {
-    const { items } = this.state;
+    const { items } = this.props.item;
     return (
       <Container>
-        <Button
-          color="dark"
-          style={{ marginBottom: '2rem' }}
-          onClick={() => {
-            const name = prompt('Enter Item');
-            if (name) {
-              this.setState((state) => ({
-                items: [...state.items, { id: uuidv4(), name }],
-              }));
-            }
-          }}
-        >
-          Add Item
-        </Button>
+        <ListGroup>
+          <TransitionGroup className="shopping-list">
+            {items.map(({ id, name }) => (
+              <CSSTransition key={id} timeout={500} className="fade">
+                <ListGroupItem>
+                  <Button
+                    className="remove-btn"
+                    color="danger"
+                    size="sm"
+                    onClick={this.onDeleteClick.bind(this, id)}
+                  ></Button>
+                  {name}
+                </ListGroupItem>
+              </CSSTransition>
+            ))}
+          </TransitionGroup>
+        </ListGroup>
       </Container>
     );
   }
 }
 
-export default ShoppingList;
+ShoppingList.propTypes = {
+  getItems: PropTypes.func.isRequired,
+  item: PropTypes.object.isRequired,
+};
+
+const mapStateToProps = (state) => ({
+  item: state.item,
+});
+
+export default connect(mapStateToProps, { getItems, deleteItem })(ShoppingList);
